@@ -1,0 +1,101 @@
+; #include <avr/io.h>
+
+; .section .text
+; .global main
+; ; .global externalISR0
+
+; main:
+;   ; Set up the stack pointer
+;   ; The stack pointer is set to the top of the SRAM
+;   ; The last cell address of the SRAM is 0x08FF
+;   ldi r16, 0xFF
+;   sts _SFR_MEM_ADDR(SPL), r16  ; Configura el puntero de pila (SPL)
+;   ldi r16, 0x08
+;   sts _SFR_MEM_ADDR(SPH), r16  ; Configura el puntero de pila (SPH)
+
+;   ; ldi r20, 0x02
+;   ; sts _SFR_MEM_ADDR(EICRA), r20  ; Configura el registro de control de interrupción externa A (EICRA)
+;   ; ldi r20, 0x01
+;   ; sts _SFR_MEM_ADDR(EIMSK), r20  ; Habilita las interrupciones externas en EIMSK
+
+;   ; sei  ; Habilita interrupciones globales
+
+;   ; Configuración del LED azul en el pin 11 (PB3)
+;   ldi r16, (1 << PB3)
+;   out _SFR_IO_ADDR(DDRB), r16  ; Configura PB3 como salida
+;   in r16, _SFR_IO_ADDR(PORTB)
+;   ori r16, (1 << PB3)  ; Enciende el LED azul
+;   out _SFR_IO_ADDR(PORTB), r16
+
+;   ; Configuración del LED verde en el pin 10 (PB2)
+;   in r16, _SFR_IO_ADDR(DDRB)
+;   ori r16, (1 << PB2)  ; Configura PB2 como salida
+;   out _SFR_IO_ADDR(DDRB), r16
+
+;   ; Configuración del LED adicional en el pin 9 (PB1)
+;   in r16, _SFR_IO_ADDR(DDRB)
+;   ori r16, (1 << PB1)  ; Configura PB1 como salida
+;   out _SFR_IO_ADDR(DDRB), r16
+
+; repeat:
+;   ; Verifica el estado del botón conectado a PD2 (INT0)
+;   in r16, _SFR_IO_ADDR(PIND)
+;   sbrc r16, 2
+;   rjmp button_not_pressed
+
+;   ; Enciende el LED adicional en el pin 9 (PB1)
+;   in r16, _SFR_IO_ADDR(PORTB)
+;   ori r16, (1 << PB1)
+;   out _SFR_IO_ADDR(PORTB), r16
+
+; button_not_pressed:
+;   rjmp repeat
+
+; ; externalISR0:
+; ;   in r16, _SFR_IO_ADDR(PINB)  ; Lee el registro de entrada del puerto B (PINB)
+; ;   ldi r17, 0x04
+; ;   eor r16, r17  ; Invierte el bit 2 en r16
+; ;   out _SFR_IO_ADDR(PORTB), r16  ; Escribe el valor de r16 en PORTB
+; ;   reti  ; Retorna de la interrupción
+
+#include <avr/io.h>
+
+.global main
+
+main:
+  ; Configuración del puntero de pila
+  ldi r16, 0xFF
+  sts _SFR_MEM_ADDR(SPL), r16
+  ldi r16, 0x08
+  sts _SFR_MEM_ADDR(SPH), r16
+
+  ; Configuración de los pines como salida
+  ldi r16, (1 << PB2) | (1 << PB1)
+  out _SFR_IO_ADDR(DDRB), r16
+
+  ; Configuración del pin 2 (PD2) como entrada
+  cbi _SFR_IO_ADDR(DDRD), PD2
+  sbi _SFR_IO_ADDR(PORTD), PD2 ; Habilita la resistencia de pull-up
+
+  ; Enciende el LED en el pin 10 (PB2)
+  ldi r16, (1 << PB2)
+  out _SFR_IO_ADDR(PORTB), r16
+
+repeat:
+  ; Verifica el estado del botón conectado a PD2
+  in r16, _SFR_IO_ADDR(PIND)
+  sbrc r16, PD2
+  rjmp button_not_pressed
+
+  ; Enciende el LED en el pin 9 (PB1) si el botón está presionado
+  in r16, _SFR_IO_ADDR(PORTB)
+  ori r16, (1 << PB1)
+  out _SFR_IO_ADDR(PORTB), r16
+  rjmp repeat
+
+button_not_pressed:
+  ; Apaga el LED en el pin 9 (PB1) si el botón no está presionado
+  in r16, _SFR_IO_ADDR(PORTB)
+  andi r16, ~(1 << PB1)
+  out _SFR_IO_ADDR(PORTB), r16
+  rjmp repeat
