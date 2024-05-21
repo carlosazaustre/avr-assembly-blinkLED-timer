@@ -13,13 +13,13 @@
 .equ F_CLK, 16000000
 
 ; Valor de retado (milisegundos)
-DELAY = 1500
+.equ DELAY, 1500
 ; Valor de comparación del temporizador
 ; basado en la frecuencia de reloj, el preescalado
 ; y el retardo.
 ; Este valor lo usamos para configurar
 ; el registro de comparación del temporizador
-EOCVAL = F_CLK / 1024 / 2 / 1000 * DELAY
+.equ EOCVAL, F_CLK / 1024 / 2 / 1000 * DELAY
 
 .text ; Iniciamos la sección de código (opcional)
 
